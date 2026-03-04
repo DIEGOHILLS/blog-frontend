@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 import { apiService, type AuthResponse } from "../services/apiService";
 
 interface AuthUser {
@@ -27,19 +33,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
 
-<<<<<<< HEAD
-    useEffect(() => {
-=======
   useEffect(() => {
->>>>>>> 058fa5bfa17d8c05522b85b067b2bbbfbbec1710
     const storedToken = localStorage.getItem("token");
     if (storedToken) {
       setIsAuthenticated(true);
       setToken(storedToken);
-<<<<<<< HEAD
-=======
-
->>>>>>> 058fa5bfa17d8c05522b85b067b2bbbfbbec1710
     } else {
       setIsAuthenticated(false);
       setToken(null);
