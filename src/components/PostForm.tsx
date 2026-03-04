@@ -27,7 +27,6 @@ import {
   List,
   ListOrdered,
   ChevronDown,
-  X,
 } from "lucide-react";
 import { Post, Category, Tag, PostStatus } from "../services/apiService";
 
@@ -56,12 +55,8 @@ const PostForm: React.FC<PostFormProps> = ({
 }) => {
   const [title, setTitle] = useState(initialPost?.title || "");
   const [categoryId, setCategoryId] = useState(initialPost?.category?.id || "");
-  const [selectedTags, setSelectedTags] = useState<Tag[]>(
-    initialPost?.tags || []
-  );
-  const [status, setStatus] = useState<PostStatus>(
-    initialPost?.status || PostStatus.DRAFT
-  );
+  const [selectedTags, setSelectedTags] = useState<Tag[]>(initialPost?.tags || []);
+  const [status, setStatus] = useState<PostStatus>(initialPost?.status || PostStatus.DRAFT);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const editor = useEditor({
@@ -70,25 +65,17 @@ const PostForm: React.FC<PostFormProps> = ({
         heading: false,
         bulletList: false,
         orderedList: false,
+        listItem: false, // ✅ prevents TipTap "Duplicate extension names: ['listItem']" warning
       }),
-      Heading.configure({
-        levels: [1, 2, 3],
-      }),
-      BulletList.configure({
-        keepMarks: true,
-        keepAttributes: false,
-      }),
-      OrderedList.configure({
-        keepMarks: true,
-        keepAttributes: false,
-      }),
+      Heading.configure({ levels: [1, 2, 3] }),
+      BulletList.configure({ keepMarks: true, keepAttributes: false }),
+      OrderedList.configure({ keepMarks: true, keepAttributes: false }),
       ListItem,
     ],
     content: initialPost?.content || "",
     editorProps: {
       attributes: {
-        class:
-          "prose max-w-none focus:outline-none min-h-[400px] px-4 py-2 border rounded-lg",
+        class: "prose max-w-none focus:outline-none min-h-[400px] px-4 py-2 border rounded-lg",
       },
     },
   });
@@ -97,8 +84,8 @@ const PostForm: React.FC<PostFormProps> = ({
     if (initialPost && editor) {
       setTitle(initialPost.title);
       editor.commands.setContent(initialPost.content);
-      setCategoryId(initialPost.category?.id);
-      setSelectedTags(initialPost.tags);
+      setCategoryId(initialPost.category?.id || "");
+      setSelectedTags(initialPost.tags || []);
       setStatus(initialPost.status || PostStatus.DRAFT);
     }
   }, [initialPost, editor]);
@@ -106,15 +93,9 @@ const PostForm: React.FC<PostFormProps> = ({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!title.trim()) {
-      newErrors.title = "Title is required";
-    }
-    if (!editor?.getHTML() || editor?.getHTML() === "<p></p>") {
-      newErrors.content = "Content is required";
-    }
-    if (!categoryId) {
-      newErrors.category = "Category is required";
-    }
+    if (!title.trim()) newErrors.title = "Title is required";
+    if (!editor?.getHTML() || editor?.getHTML() === "<p></p>") newErrors.content = "Content is required";
+    if (!categoryId) newErrors.category = "Category is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -122,7 +103,6 @@ const PostForm: React.FC<PostFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
     await onSubmit({
@@ -156,217 +136,98 @@ const PostForm: React.FC<PostFormProps> = ({
     <form onSubmit={handleSubmit} className="space-y-6">
       <Card>
         <CardBody className="space-y-4">
-          <div className="space-y-2">
-            <Input
-              label="Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              isInvalid={!!errors.title}
-              errorMessage={errors.title}
-              isRequired
-            />
+          <Input
+            label="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            isInvalid={!!errors.title}
+            errorMessage={errors.title}
+            isRequired
+          />
+
+          <div className="bg-default-100 p-2 rounded-lg mb-2 flex gap-2 flex-wrap items-center">
+            <Dropdown>
+              <DropdownTrigger>
+                <Button variant="flat" size="sm" endContent={<ChevronDown size={16} />}>
+                  Heading
+                </Button>
+              </DropdownTrigger>
+
+              <DropdownMenu onAction={(key) => handleHeadingSelect(Number(key) as 1 | 2 | 3)} aria-label="Heading levels">
+                <DropdownItem key="1">Heading 1</DropdownItem>
+                <DropdownItem key="2">Heading 2</DropdownItem>
+                <DropdownItem key="3">Heading 3</DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+
+            <Button size="sm" isIconOnly variant="flat" onClick={() => editor?.chain().focus().toggleBold().run()}>
+              <Bold size={16} />
+            </Button>
+
+            <Button size="sm" isIconOnly variant="flat" onClick={() => editor?.chain().focus().toggleItalic().run()}>
+              <Italic size={16} />
+            </Button>
+
+            <Button size="sm" isIconOnly variant="flat" onClick={() => editor?.chain().focus().toggleBulletList().run()}>
+              <List size={16} />
+            </Button>
+
+            <Button size="sm" isIconOnly variant="flat" onClick={() => editor?.chain().focus().toggleOrderedList().run()}>
+              <ListOrdered size={16} />
+            </Button>
+
+            <Button size="sm" isIconOnly variant="flat" onClick={() => editor?.chain().focus().undo().run()}>
+              <Undo size={16} />
+            </Button>
+
+            <Button size="sm" isIconOnly variant="flat" onClick={() => editor?.chain().focus().redo().run()}>
+              <Redo size={16} />
+            </Button>
           </div>
 
-          <div className="space-y-2">
-            <div className="bg-default-100 p-2 rounded-lg mb-2 flex gap-2 flex-wrap items-center">
-              <Dropdown>
-                <DropdownTrigger>
-                  <Button
-                    variant="flat"
-                    size="sm"
-                    endContent={<ChevronDown size={16} />}
-                  >
-                    Heading
-                  </Button>
-                </DropdownTrigger>
-<<<<<<< HEAD
-=======
+          <EditorContent editor={editor} />
 
->>>>>>> 058fa5bfa17d8c05522b85b067b2bbbfbbec1710
-                <DropdownMenu
-                  onAction={(key) =>
-                    handleHeadingSelect(Number(key) as 1 | 2 | 3)
-                  }
-                  aria-label="Heading levels"
-                >
-                  <DropdownItem
-                    key="1"
-                    className={
-                      editor?.isActive("heading", { level: 1 })
-                        ? "bg-default-200"
-                        : ""
-                    }
-                  >
-                    Heading 1
-                  </DropdownItem>
-                  <DropdownItem
-                    key="2"
-                    className={
-                      editor?.isActive("heading", { level: 2 })
-                        ? "bg-default-200"
-                        : ""
-                    }
-                  >
-                    Heading 2
-                  </DropdownItem>
-                  <DropdownItem
-                    key="3"
-                    className={
-                      editor?.isActive("heading", { level: 3 })
-                        ? "bg-default-200"
-                        : ""
-                    }
-                  >
-                    Heading 3
-                  </DropdownItem>
-                </DropdownMenu>
-              </Dropdown>
+          <Select
+            label="Category"
+            selectedKeys={categoryId ? [categoryId] : []}
+            onChange={(e) => setCategoryId(e.target.value)}
+            isInvalid={!!errors.category}
+            errorMessage={errors.category}
+            isRequired
+          >
+            {categories.map((cat) => (
+              <SelectItem key={cat.id}>{cat.name}</SelectItem>
+            ))}
+          </Select>
 
-              <Button
-                size="sm"
-                isIconOnly
-                variant="flat"
-                onClick={() => editor?.chain().focus().toggleBold().run()}
-                className={editor?.isActive("bold") ? "bg-default-200" : ""}
-              >
-                <Bold size={16} />
-              </Button>
-
-              <Button
-                size="sm"
-                isIconOnly
-                variant="flat"
-                onClick={() => editor?.chain().focus().toggleItalic().run()}
-                className={editor?.isActive("italic") ? "bg-default-200" : ""}
-              >
-                <Italic size={16} />
-              </Button>
-
-              <div className="h-6 w-px bg-default-300 mx-2" />
-
-              <Button
-                size="sm"
-                isIconOnly
-                variant="flat"
-                onClick={() => editor?.chain().focus().toggleBulletList().run()}
-                className={
-                  editor?.isActive("bulletList") ? "bg-default-200" : ""
-                }
-              >
-                <List size={16} />
-              </Button>
-
-              <Button
-                size="sm"
-                isIconOnly
-                variant="flat"
-                onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-                className={
-                  editor?.isActive("orderedList") ? "bg-default-200" : ""
-                }
-              >
-                <ListOrdered size={16} />
-              </Button>
-
-              <div className="h-6 w-px bg-default-300 mx-2" />
-
-              <Button
-                size="sm"
-                isIconOnly
-                variant="flat"
-                onClick={() => editor?.chain().focus().undo().run()}
-                isDisabled={!editor?.can().undo()}
-              >
-                <Undo size={16} />
-              </Button>
-
-              <Button
-                size="sm"
-                isIconOnly
-                variant="flat"
-                onClick={() => editor?.chain().focus().redo().run()}
-                isDisabled={!editor?.can().redo()}
-              >
-                <Redo size={16} />
-              </Button>
-            </div>
-
-            <EditorContent editor={editor} />
-            {errors.content && (
-              <div className="text-danger text-sm">{errors.content}</div>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Select
-              label="Category"
-              selectedKeys={categoryId ? [categoryId] : []}
-              onChange={(e) => setCategoryId(e.target.value)}
-              isInvalid={!!errors.category}
-              errorMessage={errors.category}
-              isRequired
-            >
-              {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.name}
+          <Select label="Add Tags" selectedKeys={[]}>
+            <SelectSection>
+              {suggestedTags.map((tag) => (
+                <SelectItem key={tag.id} onClick={() => handleTagAdd(tag)}>
+                  {tag.name}
                 </SelectItem>
               ))}
-            </Select>
+            </SelectSection>
+          </Select>
+
+          <div className="flex flex-wrap gap-2">
+            {selectedTags.map((tag) => (
+              <Chip key={tag.id} onClose={() => handleTagRemove(tag)}>
+                {tag.name}
+              </Chip>
+            ))}
           </div>
 
-          <div className="space-y-2">
-            <Select label="Add Tags" selectedKeys={[]}>
-              <SelectSection>
-                {suggestedTags.map((tag) => (
-                  <SelectItem
-                    key={tag.id}
-                    value={tag.id}
-                    onClick={() => handleTagAdd(tag)}
-                  >
-                    {tag.name}
-                  </SelectItem>
-                ))}
-              </SelectSection>
-            </Select>
+          <Select label="Status" selectedKeys={[status]} onChange={(e) => setStatus(e.target.value as PostStatus)}>
+            <SelectItem key={PostStatus.DRAFT}>Draft</SelectItem>
+            <SelectItem key={PostStatus.PUBLISHED}>Published</SelectItem>
+          </Select>
 
-            <div className="flex flex-wrap gap-2 mt-2">
-              {selectedTags.map((tag) => (
-                <Chip
-                  key={tag.id}
-                  onClose={() => handleTagRemove(tag)}
-                  variant="flat"
-                  endContent={<X size={14} />}
-                >
-                  {tag.name}
-                </Chip>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Select
-              label="Status"
-              selectedKeys={[status]}
-              onChange={(e) => setStatus(e.target.value as PostStatus)}
-            >
-              <SelectItem key={PostStatus.DRAFT} value={PostStatus.DRAFT}>
-                Draft
-              </SelectItem>
-              <SelectItem key={PostStatus.PUBLISHED} value={PostStatus.PUBLISHED}>
-                Published
-              </SelectItem>
-            </Select>
-          </div>
-
-          <div className="flex justify-end gap-2 pt-4">
-            <Button
-              color="danger"
-              variant="flat"
-              onClick={onCancel}
-              disabled={isSubmitting}
-            >
+          <div className="flex justify-end gap-2">
+            <Button color="danger" variant="flat" onClick={onCancel}>
               Cancel
             </Button>
+
             <Button color="primary" type="submit" isLoading={isSubmitting}>
               {initialPost ? "Update" : "Create"} Post
             </Button>
